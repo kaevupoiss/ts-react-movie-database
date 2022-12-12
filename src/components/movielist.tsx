@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Error, Genre, Movie} from "../types";
+import {Genre, Movie} from "../types";
 import {useIsVisible} from "../hooks/isVisible";
 import "./movielist.scss";
 
@@ -11,49 +11,50 @@ type MovieListProps = {
 }
 
 export function MovieList({selectedGenre, searchQuery, genres, onGenreChange}: MovieListProps) {
-    const [error, setError] = useState<Error | null>(null);
-    const [isLoaded, setIsLoaded] = useState<boolean>(false);
-
     const [movies, setMovies] = useState<Movie[]>([])
     const [filteredMovies, setFilteredMovies] = useState<Movie[]>([])
     const [moviesPage, setMoviesPage] = useState<number>(1);
-    const [selectedMovie, setSelectedMovie] = useState<number | null>(null);
-    const [lastMovie, setLastMovie] = useState<HTMLLIElement | null>(null);
+    const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
+    const [selectedMovie, setSelectedMovie] = useState<HTMLLIElement | null>(null);
 
     const loadTriggerRef = React.createRef<HTMLLIElement>();
     const isLoadTriggerVisible = useIsVisible(loadTriggerRef);
 
     const getMovies = () => {
 
+        setMoviesPage(moviesPage + 1);
+
         fetch('https://api.themoviedb.org/3/discover/movie?api_key=' + process.env.REACT_APP_TMDB_API_KEY + '&page=' + moviesPage)
             .then(response => response.json())
             .then(
                 (result) => {
-                    setIsLoaded(true);
                     setMovies([...movies, ...result.results]);
-                },
-                (error) => {
-                    setIsLoaded(true);
-                    setError(error);
-                }
-            );
-
-        setMoviesPage(moviesPage + 1);
+                })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
     }
 
     const setMovie = (e: React.MouseEvent<HTMLLIElement>, id: number) => {
-        if (!e.currentTarget) return;
+        if (!e.currentTarget) {
+            setTimeout(() => {
+                selectedMovie?.style.removeProperty("height");
+                setSelectedMovie(null);
+                setSelectedMovieId(null);
+            });
+            return;
+        }
 
-        setSelectedMovie(id);
+        setSelectedMovieId(id);
         const target = e.currentTarget as HTMLLIElement;
         const targetInfo = target.getElementsByClassName("movie__info-container")[0] as HTMLDivElement;
 
         setTimeout(() => {
-            lastMovie?.style.removeProperty("height");
+            selectedMovie?.style.removeProperty("height");
             target.style.height = target.offsetHeight + targetInfo.offsetHeight + 16 + 'px';
         }, 0);
 
-        setLastMovie(target);
+        setSelectedMovie(target);
     }
 
     const getStarType = (index: number, vote_average: number) => {
@@ -73,10 +74,11 @@ export function MovieList({selectedGenre, searchQuery, genres, onGenreChange}: M
     }
 
     useEffect(() => {
+        setMovie({} as React.MouseEvent<HTMLLIElement>, -1);
         setFilteredMovies(
             movies.filter(movie => checkGenre(movie, selectedGenre) && checkSearch(movie, searchQuery))
         );
-    }, [selectedGenre, searchQuery, movies]);
+    }, [selectedGenre, searchQuery, movies]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         getMovies();
@@ -88,20 +90,12 @@ export function MovieList({selectedGenre, searchQuery, genres, onGenreChange}: M
         if (isLoadTriggerVisible) {
             getMovies()
         }
-    }, [isLoadTriggerVisible]) // eslint-disable-line react-hooks/exhaustive-deps
-
-    if (error) {
-        return <div>Error {error.status_code}: {error.status_message}</div>;
-    }
-
-    if (!isLoaded) {
-        return <div>Loading...</div>;
-    }
+    }, [isLoadTriggerVisible, movies]) // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <ul className="movie-list">
             {filteredMovies.map(movie =>
-                <li className={`movie ${movie.id === selectedMovie ? "movie--selected" : ""}`}
+                <li className={`movie ${movie.id === selectedMovieId ? "movie--selected" : ""}`}
                     onClick={(e) => setMovie(e, movie.id)}
                     key={movie.id}
                 >
@@ -112,6 +106,7 @@ export function MovieList({selectedGenre, searchQuery, genres, onGenreChange}: M
                                  alt={movie.title}
                             />
                         }
+                        <div className="movie__play-button"></div>
                     </div>
                     <div className="movie__info-container">
                         <div className="movie__gradient"></div>
