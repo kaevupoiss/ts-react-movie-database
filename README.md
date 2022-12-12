@@ -10,7 +10,7 @@ but I was still going to follow the design as closely as possible.
 
 ## 2. Getting familiar with React and its ecosystem.
 
-### 2h
+### 3h
 
 I have never used React with TypeScript before.
 In fact, I have tried React only once, a couple of years ago, when choosing between React, Vue and Svelte.
@@ -60,9 +60,11 @@ it would have been a simple addition.
 
 ## 6. Refactoring
 
-## 7. Testing
+### 3h
 
-## 8. Summary and Afterthoughts
+I refactored the project into smaller components. This included header and the movie list.
+
+## 7. Summary and Afterthoughts
 
 ---
 

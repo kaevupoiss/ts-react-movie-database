@@ -12,6 +12,7 @@ export function useIsVisible(ref: RefObject<HTMLElement>) {
         if (ref.current) {
             observer.observe(ref.current);
         }
+
         return () => {
             observer.disconnect();
         };
