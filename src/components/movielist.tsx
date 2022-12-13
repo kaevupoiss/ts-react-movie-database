@@ -2,6 +2,7 @@ import React, {useEffect, useState} from "react";
 import {Genre, Movie} from "../types";
 import {useIsVisible} from "../hooks/isVisible";
 import "./movielist.scss";
+import {SingleMovie} from "./singlemovie";
 
 type MovieListProps = {
     selectedGenre: number,
@@ -11,138 +12,118 @@ type MovieListProps = {
 }
 
 export function MovieList({selectedGenre, searchQuery, genres, onGenreChange}: MovieListProps) {
-    const [movies, setMovies] = useState<Movie[]>([])
-    const [filteredMovies, setFilteredMovies] = useState<Movie[]>([])
+    const [movies, setMovies] = useState<Movie[]>([]);
+    const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
     const [moviesPage, setMoviesPage] = useState<number>(1);
-    const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
-    const [selectedMovie, setSelectedMovie] = useState<HTMLLIElement | null>(null);
+    const [selectedMovieId, setSelectedMovieId] = useState<number>(-1);
+    const [selectedMovie, setSelectedMovie] = useState<HTMLLIElement | undefined>(undefined);
 
     const loadTriggerRef = React.createRef<HTMLLIElement>();
     const isLoadTriggerVisible = useIsVisible(loadTriggerRef);
 
-    const getMovies = () => {
+    /**
+     * Get more movies from the API and append them to movies list.
+     */
+    const getMovies = async () => {
+
+        const qs = new URLSearchParams({
+            api_key: process.env.REACT_APP_TMDB_API_KEY ?? "",
+            page: moviesPage.toString(),
+        });
 
         setMoviesPage(moviesPage + 1);
 
-        fetch('https://api.themoviedb.org/3/discover/movie?api_key=' + process.env.REACT_APP_TMDB_API_KEY + '&page=' + moviesPage)
+        await fetch(`${process.env.REACT_APP_API_URL}/discover/movie?${qs.toString()}`)
             .then(response => response.json())
-            .then(
-                (result) => {
-                    setMovies([...movies, ...result.results]);
-                })
+            .then((result) => {
+                setMovies([...movies, ...result.results]);
+            })
             .catch((error) => {
-                console.error('Error:', error);
+                console.error("Error:", error);
             });
     }
 
-    const setMovie = (e: React.MouseEvent<HTMLLIElement>, id: number) => {
-        if (!e.currentTarget) {
+    /**
+     * Open new movie info and close the old one.
+     * @param id
+     * @param movieRef
+     * @param infoRef
+     */
+    const setMovie = (id: number, movieRef?: HTMLLIElement, infoRef?: HTMLDivElement) => {
+
+        if (!movieRef) {
             setTimeout(() => {
                 selectedMovie?.style.removeProperty("height");
-                setSelectedMovie(null);
-                setSelectedMovieId(null);
+                setSelectedMovie(undefined);
+                setSelectedMovieId(-1);
             });
             return;
         }
 
         setSelectedMovieId(id);
-        const target = e.currentTarget as HTMLLIElement;
-        const targetInfo = target.getElementsByClassName("movie__info-container")[0] as HTMLDivElement;
+
+        if (!infoRef) return;
 
         setTimeout(() => {
             selectedMovie?.style.removeProperty("height");
-            target.style.height = target.offsetHeight + targetInfo.offsetHeight + 16 + 'px';
+            movieRef.style.height = movieRef.offsetHeight + infoRef.offsetHeight + 16 + 'px';
         }, 0);
 
-        setSelectedMovie(target);
+        setSelectedMovie(movieRef);
     }
 
-    const getStarType = (index: number, vote_average: number) => {
-        if (index < vote_average / 2) return 'star'
-        if (index - 0.5 < vote_average / 2) return 'star_half'
-        return 'star_border'
-    }
-
+    /**
+     * Check if movie is in the selected genre
+     * @param movie
+     * @param genre
+     */
     const checkGenre = (movie: Movie, genre: number) => {
         if (genre === -1) return true;
         return movie.genre_ids.includes(genre);
     }
 
+    /**
+     * Check if the movie title contains the search query
+     * @param movie
+     * @param searchQuery
+     */
     const checkSearch = (movie: Movie, searchQuery: string) => {
-        if (searchQuery === '') return true;
+        if (searchQuery === "") return true;
         return movie.title.toLowerCase().includes(searchQuery.toLowerCase());
     }
 
+    /**
+     * Filter movies based on selected genre and search query
+     * Triggers when movies, selectedGenre or searchQuery changes
+     */
     useEffect(() => {
-        setMovie({} as React.MouseEvent<HTMLLIElement>, -1);
+        if (selectedMovieId !== -1) setMovie(-1);
+
         setFilteredMovies(
             movies.filter(movie => checkGenre(movie, selectedGenre) && checkSearch(movie, searchQuery))
         );
     }, [selectedGenre, searchQuery, movies]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    /**
+     *  Load more movies when the load trigger is visible.
+     *  Triggers again if movie list changes until trigger is out of view.
+     */
     useEffect(() => {
-        getMovies();
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-    useEffect(() => {
-        console.log(isLoadTriggerVisible) // TODO: remove
-
         if (isLoadTriggerVisible) {
-            getMovies()
+            getMovies();
         }
-    }, [isLoadTriggerVisible, movies]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [isLoadTriggerVisible, movies]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <ul className="movie-list">
             {filteredMovies.map(movie =>
-                <li className={`movie ${movie.id === selectedMovieId ? "movie--selected" : ""}`}
-                    onClick={(e) => setMovie(e, movie.id)}
-                    key={movie.id}
-                >
-                    <div className="movie__poster">
-                        {movie.poster_path &&
-                            <img src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`}
-                                 draggable="false"
-                                 alt={movie.title}
-                            />
-                        }
-                        <div className="movie__play-button"></div>
-                    </div>
-                    <div className="movie__info-container">
-                        <div className="movie__gradient"></div>
-                        <div className="movie__info">
-                            <h2 className="movie__title">{movie.title}</h2>
-                            <div className="movie__rating"
-                                 aria-label={"Rating: " + movie.vote_average + "out of 10"}
-                            >
-                                {[...Array(5)].map((_, i) =>
-                                    <span className="material-icons movie__rating" aria-hidden="true" key={i}>
-                                        {getStarType(i, movie.vote_average)}
-                                    </span>
-                                )}
-                            </div>
-                            <p>
-                                {movie.overview}
-                            </p>
-                            <div className="movie__tags">
-                                {movie.genre_ids.map(genreId =>
-                                    <span className="movie__tag"
-                                          onClick={() => onGenreChange(genreId)}
-                                          key={genreId}
-                                    >
-                                        #{genres.find(genre => genre.id === genreId)?.name}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                        {movie.backdrop_path &&
-                            <img className="movie__backdrop" draggable="false"
-                                 src={`https://image.tmdb.org/t/p/w780/${movie.backdrop_path}`}
-                                 alt={movie.title}
-                            />
-                        }
-                    </div>
-                </li>
+                <SingleMovie movie={movie}
+                             selectedMovieId={selectedMovieId}
+                             onMovieClick={setMovie}
+                             onGenreClick={onGenreChange}
+                             genres={genres}
+                             key={movie.id}
+                />
             )}
             <li className="movie__load-trigger" ref={loadTriggerRef} aria-hidden="true"></li>
         </ul>

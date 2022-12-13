@@ -22,6 +22,18 @@ export function Header({genres, selectedGenre, searchQuery, onSearchQueryChange,
         onGenreChange(id);
     }
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLLIElement>, id: number) => {
+        if (e.key === "Enter") {
+            handleGenreChange(id);
+        }
+    }
+
+    const handleShowAllGenresKeyDown = (e: React.KeyboardEvent<HTMLLIElement>) => {
+        if (e.key === "Enter") {
+            setShowAllGenres(!showAllGenres);
+        }
+    }
+
     return (
         <header className="header">
             <h1>
@@ -37,14 +49,17 @@ export function Header({genres, selectedGenre, searchQuery, onSearchQueryChange,
                 {genres.slice(0, showAllGenres ? genres.length : 6).map(genre =>
                     <li className={`genres__genre ${selectedGenre === genre.id ? 'genres__genre--selected' : ''}`}
                         aria-selected={selectedGenre === genre.id}
+                        tabIndex={0}
                         key={genre.id}
                         role="tab"
                         onClick={() => handleGenreChange(genre.id)}
+                        onKeyDown={(e) => handleKeyDown(e, genre.id)}
                     >
                         {genre.name}
                     </li>
                 )}
-                <li className="genres__show-all" onClick={() => setShowAllGenres(!showAllGenres)}>
+                <li className="genres__show-all" tabIndex={0} onKeyDown={(e) => handleShowAllGenresKeyDown(e)}
+                    onClick={() => setShowAllGenres(!showAllGenres)}>
                     {showAllGenres ? 'Less' : 'More'}
                 </li>
             </ul>

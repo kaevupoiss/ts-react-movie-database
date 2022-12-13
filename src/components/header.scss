@@ -33,6 +33,12 @@
 
   &__show-all {
     cursor: pointer;
+
+    opacity: 0.75;
+
+    &:focus {
+      opacity: 1;
+    }
   }
 
   &__showing-all {
@@ -48,6 +54,10 @@
 
     &:hover:not(&--selected) {
       opacity: 0.75;
+    }
+
+    &:focus {
+      opacity: 1;
     }
 
     &--selected {

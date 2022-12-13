@@ -2,15 +2,15 @@
 
 ## 1. Reading project requirements and planning
 
+### ~0.5h
+
 The project requirements were straightforward. The design was interesting, yet simple.
 I found some sizes and spacings in the design that I thought were a bit off,
 but I was still going to follow the design as closely as possible.
 
-### 0.5h
-
 ## 2. Getting familiar with React and its ecosystem.
 
-### 3h
+### ~3h
 
 I have never used React with TypeScript before.
 In fact, I have tried React only once, a couple of years ago, when choosing between React, Vue and Svelte.
@@ -19,7 +19,7 @@ It's now time to give React another try.
 
 ## 3. Setting up the project
 
-### 1h
+### ~1h
 
 I have been following React's developments for a few years.
 I recall some discourse about using `create-react-app` or its alternatives, so I was not sure which one to use for this
@@ -34,7 +34,7 @@ In this stage I also added sass by running `npm install sass`, google fonts and 
 
 ## 4. Implementing the UI
 
-### 9h
+### ~9h
 
 Most of the UI was straightforward to implement, while quickly learning react on the way.
 I decided to use functional components,
@@ -48,7 +48,7 @@ selected movie poster's height, to push the next row of movies lower. This took 
 
 ## 5. Integrating the API
 
-### 3h
+### ~3h
 
 I added an environment variable to the `.env` file to store the API Key and the API URL.
 
@@ -60,11 +60,24 @@ it would have been a simple addition.
 
 ## 6. Refactoring
 
-### 3h
+### ~6h
 
-I refactored the project into smaller components. This included header and the movie list.
+I refactored the project into smaller components.
+This included header, movie list and the single movie components.
+Refactor introduced some random niche bugs, which I had to fix.
 
 ## 7. Summary and Afterthoughts
+
+### Total time: ~22.5h
+
+This project was a nice introduction to React.
+I feel like I grasped the basics fairly quickly, and I am ready to start diving in deeper.
+Having used Vue and Svelte before, I found React's syntax a bit "hacky", but I am sure I will get used to it.
+
+Projectwise, it still has some rough edges. Visually, I would like to add some animations.
+Functionally I would add some more error handling and loading states.
+
+Thank you for the opportunity to work on this project. I had a lot of fun working on it.
 
 ---
 
